@@ -100,17 +100,26 @@ document.addEventListener('DOMContentLoaded', bindAll);
 
 function handleFiles(files) {
   for (const file of files) {
-    if (!file.name.match(/\.(txt|md)$/i)) {
-      alert(`"${file.name}" is not supported. Please upload .txt or .md files.\n\nFor PDFs or Word docs, copy the text and paste it into the Additional Notes field.`);
+    if (!file.name.match(/\.(txt|md|pdf)$/i)) {
+      alert(`"${file.name}" is not supported. Please upload .txt, .md, or .pdf files.`);
       continue;
     }
     if (uploadedFiles.find(f => f.name === file.name)) continue;
     const reader = new FileReader();
-    reader.onload = e => {
-      uploadedFiles.push({ name: file.name, size: file.size, content: e.target.result });
-      renderFileList();
-    };
-    reader.readAsText(file);
+    if (file.name.match(/\.pdf$/i)) {
+      reader.onload = e => {
+        const base64 = e.target.result.split(',')[1];
+        uploadedFiles.push({ name: file.name, size: file.size, type: 'pdf', content: base64 });
+        renderFileList();
+      };
+      reader.readAsDataURL(file);
+    } else {
+      reader.onload = e => {
+        uploadedFiles.push({ name: file.name, size: file.size, type: 'text', content: e.target.result });
+        renderFileList();
+      };
+      reader.readAsText(file);
+    }
   }
 }
 
@@ -154,20 +163,19 @@ function buildUserMessage(mode) {
   const location  = document.getElementById('f-location').value.trim();
   const context   = document.getElementById('f-context').value.trim();
 
-  const parts = [];
+  const textFiles = uploadedFiles.filter(f => f.type !== 'pdf');
+  const pdfFiles  = uploadedFiles.filter(f => f.type === 'pdf');
 
-  if (mode === 'outreach') {
-    parts.push('Please create the complete 11-message outreach campaign using the provided brand materials.');
-  } else {
-    parts.push('Please create the complete content brief HTML file using the provided brand materials.');
-  }
+  let instruction = mode === 'outreach'
+    ? 'Please create the complete 11-message outreach campaign using the provided brand materials.'
+    : 'Please create the complete content brief HTML file using the provided brand materials.';
 
-  if (uploadedFiles.length > 0) {
-    parts.push('\n--- BRAND MATERIALS ---');
-    for (const f of uploadedFiles) {
-      parts.push(`\n[FILE: ${f.name}]\n${f.content}`);
+  if (textFiles.length > 0) {
+    instruction += '\n\n--- BRAND MATERIALS ---';
+    for (const f of textFiles) {
+      instruction += `\n\n[FILE: ${f.name}]\n${f.content}`;
     }
-    parts.push('--- END BRAND MATERIALS ---');
+    instruction += '\n--- END BRAND MATERIALS ---';
   }
 
   const details = [
@@ -181,14 +189,17 @@ function buildUserMessage(mode) {
   ].filter(Boolean);
 
   if (details.length > 0) {
-    parts.push('\n--- CAMPAIGN DETAILS ---\n' + details.join('\n'));
+    instruction += '\n\n--- CAMPAIGN DETAILS ---\n' + details.join('\n');
   }
 
-  if (uploadedFiles.length === 0 && details.length === 0) {
-    return null;
-  }
+  if (uploadedFiles.length === 0 && details.length === 0) return null;
 
-  return parts.join('\n');
+  const blocks = [];
+  for (const f of pdfFiles) {
+    blocks.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: f.content } });
+  }
+  blocks.push({ type: 'text', text: instruction });
+  return blocks;
 }
 
 // ── API ───────────────────────────────────────────────────────────────────────
