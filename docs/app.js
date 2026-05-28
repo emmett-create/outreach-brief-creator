@@ -91,8 +91,17 @@ DESIGN:
 const API_URL   = 'https://api.anthropic.com/v1/messages';
 const MODEL     = 'claude-sonnet-4-6';
 let uploadedFiles = [];
-let lastOutreachText  = '';
-let lastOutreachBrand = '';
+let lastOutreachText     = '';
+let lastOutreachBrand    = '';
+let lastOutreachMessages = [];
+
+function messagesToText(msgs) {
+  return msgs.map(m =>
+    `## ${m.num}. ${m.name}` +
+    (m.subject ? `\nSubject: ${m.subject}` : '') +
+    `\n\n${m.body}`
+  ).join('\n\n---\n\n');
+}
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 
@@ -321,6 +330,8 @@ function renderOutreachMessages(text, brand) {
     messages.push({ num, name, subject, body });
   }
 
+  lastOutreachMessages = messages;
+
   const container = document.getElementById('messages-container');
   container.innerHTML = '';
 
@@ -330,30 +341,44 @@ function renderOutreachMessages(text, brand) {
     pre.textContent = text;
     container.appendChild(pre);
   } else {
+    const toolbar = document.createElement('div');
+    toolbar.className = 'msg-toolbar';
+
     const copyAllBtn = document.createElement('button');
     copyAllBtn.className = 'btn-copy-all';
-    copyAllBtn.textContent = 'Copy All Messages';
+    copyAllBtn.textContent = 'Copy All';
     copyAllBtn.addEventListener('click', () => {
-      const allText = messages.map(m =>
-        `## ${m.num}. ${m.name}` +
-        (m.subject ? `\nSubject: ${m.subject}` : '') +
-        `\n\n${m.body}`
-      ).join('\n\n---\n\n');
-      navigator.clipboard.writeText(allText).then(() => {
+      navigator.clipboard.writeText(messagesToText(lastOutreachMessages)).then(() => {
         copyAllBtn.textContent = 'Copied!';
-        setTimeout(() => { copyAllBtn.textContent = 'Copy All Messages'; }, 2000);
+        setTimeout(() => { copyAllBtn.textContent = 'Copy All'; }, 2000);
       });
     });
-    container.appendChild(copyAllBtn);
-    messages.forEach((msg, idx) => container.appendChild(buildMsgCard(msg, idx === 0)));
+
+    const toggleAllBtn = document.createElement('button');
+    toggleAllBtn.className = 'btn-copy-all';
+    toggleAllBtn.textContent = 'Expand All';
+    toggleAllBtn.addEventListener('click', () => {
+      const bodies  = container.querySelectorAll('.msg-body');
+      const chevs   = container.querySelectorAll('.msg-chevron');
+      const anyOpen = Array.from(bodies).some(b => b.style.display !== 'none');
+      bodies.forEach(b  => b.style.display  = anyOpen ? 'none' : 'block');
+      chevs.forEach(c   => c.textContent    = anyOpen ? '▼'    : '▲');
+      toggleAllBtn.textContent = anyOpen ? 'Expand All' : 'Collapse All';
+    });
+
+    toolbar.appendChild(copyAllBtn);
+    toolbar.appendChild(toggleAllBtn);
+    container.appendChild(toolbar);
+
+    messages.forEach((msg, idx) => container.appendChild(buildMsgCard(msg, idx === 0, idx)));
 
     const refineDiv = document.createElement('div');
     refineDiv.className = 'refine-area';
     refineDiv.innerHTML = `
-      <div class="refine-label">Want to make changes?</div>
+      <div class="refine-label">Apply a change to all messages</div>
       <div class="refine-row">
         <input type="text" id="refine-input" class="refine-input" placeholder='e.g. "Make the DM messages shorter" or "Remove the Vogue mention"'>
-        <button class="btn-refine" id="refine-btn">Apply</button>
+        <button class="btn-refine" id="refine-btn">Apply to All</button>
       </div>`;
     container.appendChild(refineDiv);
 
@@ -366,29 +391,41 @@ function renderOutreachMessages(text, brand) {
   showResults('Outreach Copy — ' + brand, messages.length + ' messages');
 }
 
-function buildMsgCard(msg, openByDefault) {
-  const card      = document.createElement('div');
-  card.className  = 'msg-card';
-  const copyStr   = (msg.subject ? 'Subject: ' + msg.subject + '\n\n' : '') + msg.body;
+function buildMsgCard(msg, openByDefault, idx) {
+  const card     = document.createElement('div');
+  card.className = 'msg-card';
 
   card.innerHTML = `
     <div class="msg-card-hdr">
       <span class="msg-num">${msg.num}</span>
       <span class="msg-name">${esc(msg.name)}</span>
       <button class="btn-copy">Copy</button>
+      <button class="btn-edit-msg">Edit</button>
       <span class="msg-chevron">${openByDefault ? '▲' : '▼'}</span>
     </div>
+    <div class="msg-edit-area hidden">
+      <div class="refine-row">
+        <input type="text" class="refine-input msg-edit-input" placeholder='e.g. "Make this more casual" or "Shorten to 3 sentences"'>
+        <button class="btn-refine msg-edit-apply">Apply</button>
+        <button class="btn-edit-cancel">Cancel</button>
+      </div>
+    </div>
     <div class="msg-body"${openByDefault ? '' : ' style="display:none"'}>
-      ${msg.subject ? `<div class="msg-subject">Subject: ${esc(msg.subject)}</div>` : ''}${esc(msg.body)}
+      ${msg.subject ? `<div class="msg-subject">Subject: ${esc(msg.subject)}</div>` : ''}<span class="msg-body-text">${esc(msg.body)}</span>
     </div>`;
 
-  const hdr   = card.querySelector('.msg-card-hdr');
-  const body  = card.querySelector('.msg-body');
-  const chev  = card.querySelector('.msg-chevron');
-  const cpBtn = card.querySelector('.btn-copy');
+  const hdr       = card.querySelector('.msg-card-hdr');
+  const body      = card.querySelector('.msg-body');
+  const chev      = card.querySelector('.msg-chevron');
+  const cpBtn     = card.querySelector('.btn-copy');
+  const editBtn   = card.querySelector('.btn-edit-msg');
+  const editArea  = card.querySelector('.msg-edit-area');
+  const editInput = card.querySelector('.msg-edit-input');
+  const applyBtn  = card.querySelector('.msg-edit-apply');
+  const cancelBtn = card.querySelector('.btn-edit-cancel');
 
   hdr.addEventListener('click', e => {
-    if (e.target === cpBtn) return;
+    if (e.target === cpBtn || e.target === editBtn) return;
     const open = body.style.display !== 'none';
     body.style.display = open ? 'none' : 'block';
     chev.textContent   = open ? '▼' : '▲';
@@ -396,6 +433,7 @@ function buildMsgCard(msg, openByDefault) {
 
   cpBtn.addEventListener('click', e => {
     e.stopPropagation();
+    const copyStr = (msg.subject ? 'Subject: ' + msg.subject + '\n\n' : '') + msg.body;
     navigator.clipboard.writeText(copyStr).then(() => {
       cpBtn.textContent = 'Copied!';
       cpBtn.classList.add('copied');
@@ -403,7 +441,80 @@ function buildMsgCard(msg, openByDefault) {
     });
   });
 
+  editBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    editArea.classList.toggle('hidden');
+    if (!editArea.classList.contains('hidden')) {
+      body.style.display = 'block';
+      chev.textContent   = '▲';
+      editInput.focus();
+    }
+  });
+
+  cancelBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    editArea.classList.add('hidden');
+    editInput.value = '';
+  });
+
+  const doEdit = async () => {
+    const request = editInput.value.trim();
+    if (!request) return;
+    applyBtn.disabled    = true;
+    applyBtn.textContent = 'Updating…';
+
+    const msgText = `## ${msg.num}. ${msg.name}` +
+      (msg.subject ? `\nSubject: ${msg.subject}` : '') +
+      `\n\n${msg.body}`;
+
+    const userMsg = [{ type: 'text', text:
+      `Here is one outreach message:\n\n${msgText}\n\n` +
+      `Please make these changes: ${request}\n\n` +
+      `Return only this updated message in the same format, starting with ## ${msg.num}. on the first line.`
+    }];
+
+    try {
+      const text    = await callClaude(OUTREACH_PROMPT, userMsg, 2000);
+      const parsed  = parseOneMessage(text, msg.num, msg.name);
+      msg.subject   = parsed.subject;
+      msg.body      = parsed.body;
+      msg.name      = parsed.name;
+
+      const subjectEl = body.querySelector('.msg-subject');
+      const bodyText  = body.querySelector('.msg-body-text');
+      if (msg.subject) {
+        if (subjectEl) subjectEl.textContent = 'Subject: ' + msg.subject;
+        else body.insertAdjacentHTML('afterbegin', `<div class="msg-subject">Subject: ${esc(msg.subject)}</div>`);
+      } else if (subjectEl) subjectEl.remove();
+      bodyText.textContent = msg.body;
+
+      lastOutreachMessages[idx] = msg;
+      lastOutreachText = messagesToText(lastOutreachMessages);
+
+      editArea.classList.add('hidden');
+      editInput.value = '';
+    } catch (e) {
+      alert('Error: ' + e.message);
+    } finally {
+      applyBtn.disabled    = false;
+      applyBtn.textContent = 'Apply';
+    }
+  };
+
+  applyBtn.addEventListener('click', e => { e.stopPropagation(); doEdit(); });
+  editInput.addEventListener('keydown', e => { if (e.key === 'Enter') doEdit(); });
+
   return card;
+}
+
+function parseOneMessage(text, fallbackNum, fallbackName) {
+  const headingMatch = text.match(/^##\s+(\d+)\.\s+(.+)/m);
+  const name    = headingMatch ? headingMatch[2].trim() : fallbackName;
+  const after   = headingMatch ? text.slice(text.indexOf(headingMatch[0]) + headingMatch[0].length).trim() : text.trim();
+  const subMatch = after.match(/^Subject:\s*(.+)/m);
+  const subject  = subMatch ? subMatch[1].trim() : '';
+  const body     = subMatch ? after.replace(/^Subject:\s*.+\n?/, '').trim() : after;
+  return { num: fallbackNum, name, subject, body };
 }
 
 // ── Render: content brief download ───────────────────────────────────────────
@@ -491,6 +602,15 @@ function bindAll() {
     const val = document.getElementById('f-api-key').value.trim();
     if (val && !val.startsWith('••')) localStorage.setItem('a8_anthropic_key', val);
     hide('settings-overlay');
+  });
+
+  // Persist manager details
+  const savedFields = ['f-manager-name', 'f-manager-title', 'f-location', 'f-team-email'];
+  savedFields.forEach(id => {
+    const el  = document.getElementById(id);
+    const val = localStorage.getItem('a8_' + id);
+    if (val) el.value = val;
+    el.addEventListener('blur', () => localStorage.setItem('a8_' + id, el.value.trim()));
   });
 
   // No-key modal

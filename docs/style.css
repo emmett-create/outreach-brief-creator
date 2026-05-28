@@ -268,13 +268,33 @@ input::placeholder, textarea::placeholder { color: #b0a0a0; }
 .btn-refine:hover { background: #e00000; }
 .btn-refine:disabled { background: #e8ddd8; color: #b0a0a0; cursor: not-allowed; }
 
-/* Copy all button */
+/* Toolbar above message cards */
+.msg-toolbar {
+  display: flex; gap: 8px; margin-bottom: 12px;
+}
 .btn-copy-all {
-  width: 100%; background: none; border: 1px solid #d8ccc8;
+  flex: 1; background: none; border: 1px solid #d8ccc8;
   border-radius: 6px; color: #8a6a6a;
   cursor: pointer; font-size: 13px; padding: 9px 16px;
-  margin-bottom: 12px; transition: all 0.15s;
+  transition: all 0.15s;
 }
 .btn-copy-all:hover { border-color: #CA0100; color: #CA0100; }
+
+/* Per-card edit button */
+.btn-edit-msg {
+  background: none; border: 1px solid #d8ccc8;
+  border-radius: 4px; color: #8a6a6a;
+  cursor: pointer; font-size: 11px; padding: 3px 10px;
+  white-space: nowrap; flex-shrink: 0; transition: all 0.15s;
+}
+.btn-edit-msg:hover { border-color: #8a6a6a; color: #1a0000; }
+.msg-edit-area { padding: 10px 16px; border-bottom: 1px solid #e8e0d8; background: #fdf9f4; }
+.btn-edit-cancel {
+  background: none; border: 1px solid #d8ccc8;
+  border-radius: 5px; color: #8a6a6a;
+  cursor: pointer; font-size: 13px; padding: 8px 14px;
+  white-space: nowrap; transition: all 0.15s;
+}
+.btn-edit-cancel:hover { border-color: #8a6a6a; color: #1a0000; }
 
 .hidden { display: none !important; }
