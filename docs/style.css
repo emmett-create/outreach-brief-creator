@@ -242,4 +242,13 @@ input::placeholder, textarea::placeholder { color: #b0a0a0; }
 }
 .btn-pri:hover { background: #e00000; }
 
+/* Copy all button */
+.btn-copy-all {
+  width: 100%; background: none; border: 1px solid #d8ccc8;
+  border-radius: 6px; color: #8a6a6a;
+  cursor: pointer; font-size: 13px; padding: 9px 16px;
+  margin-bottom: 12px; transition: all 0.15s;
+}
+.btn-copy-all:hover { border-color: #CA0100; color: #CA0100; }
+
 .hidden { display: none !important; }

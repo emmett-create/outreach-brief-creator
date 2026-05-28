@@ -296,10 +296,25 @@ function renderOutreachMessages(text, brand) {
 
   if (messages.length === 0) {
     const pre = document.createElement('pre');
-    pre.style.cssText = 'white-space:pre-wrap;font-size:13px;color:#c9d1d9;line-height:1.6;';
+    pre.style.cssText = 'white-space:pre-wrap;font-size:13px;color:#1a0000;line-height:1.6;';
     pre.textContent = text;
     container.appendChild(pre);
   } else {
+    const copyAllBtn = document.createElement('button');
+    copyAllBtn.className = 'btn-copy-all';
+    copyAllBtn.textContent = 'Copy All Messages';
+    copyAllBtn.addEventListener('click', () => {
+      const allText = messages.map(m =>
+        `## ${m.num}. ${m.name}` +
+        (m.subject ? `\nSubject: ${m.subject}` : '') +
+        `\n\n${m.body}`
+      ).join('\n\n---\n\n');
+      navigator.clipboard.writeText(allText).then(() => {
+        copyAllBtn.textContent = 'Copied!';
+        setTimeout(() => { copyAllBtn.textContent = 'Copy All Messages'; }, 2000);
+      });
+    });
+    container.appendChild(copyAllBtn);
     messages.forEach((msg, idx) => container.appendChild(buildMsgCard(msg, idx === 0)));
   }
 
