@@ -242,6 +242,32 @@ input::placeholder, textarea::placeholder { color: #b0a0a0; }
 }
 .btn-pri:hover { background: #e00000; }
 
+/* Refine area */
+.refine-area {
+  margin-top: 16px; padding: 16px;
+  background: #fdf9f4; border: 1px solid #e0d8d0;
+  border-radius: 8px;
+}
+.refine-label {
+  font-size: 11px; font-weight: 600; color: #8a6a6a;
+  text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px;
+}
+.refine-row { display: flex; gap: 8px; }
+.refine-input {
+  flex: 1; background: #fff; border: 1px solid #d8ccc8;
+  border-radius: 5px; color: #1a0000; font-size: 13px;
+  padding: 8px 11px; outline: none; font-family: inherit;
+}
+.refine-input:focus { border-color: #CA0100; }
+.btn-refine {
+  background: #CA0100; border: none; border-radius: 5px;
+  color: #fff; cursor: pointer; font-size: 13px;
+  font-weight: 600; padding: 8px 18px; white-space: nowrap;
+  transition: background 0.15s;
+}
+.btn-refine:hover { background: #e00000; }
+.btn-refine:disabled { background: #e8ddd8; color: #b0a0a0; cursor: not-allowed; }
+
 /* Copy all button */
 .btn-copy-all {
   width: 100%; background: none; border: 1px solid #d8ccc8;

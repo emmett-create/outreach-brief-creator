@@ -91,6 +91,8 @@ DESIGN:
 const API_URL   = 'https://api.anthropic.com/v1/messages';
 const MODEL     = 'claude-sonnet-4-6';
 let uploadedFiles = [];
+let lastOutreachText  = '';
+let lastOutreachBrand = '';
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 
@@ -241,6 +243,8 @@ async function generateOutreach() {
   try {
     const text  = await callClaude(OUTREACH_PROMPT, userMsg, 8000);
     const brand = document.getElementById('f-brand').value.trim() || 'Campaign';
+    lastOutreachText  = text;
+    lastOutreachBrand = brand;
     renderOutreachMessages(text, brand);
   } catch (e) {
     showError(e.message);
@@ -265,6 +269,32 @@ async function generateBrief() {
     showError(e.message);
   } finally {
     setButtons(false);
+  }
+}
+
+async function refineOutreach() {
+  const input = document.getElementById('refine-input');
+  const btn   = document.getElementById('refine-btn');
+  const request = input ? input.value.trim() : '';
+  if (!request) return;
+
+  btn.disabled    = true;
+  btn.textContent = 'Updating…';
+
+  const userMsg = [{ type: 'text', text:
+    `Here is the current outreach copy:\n\n${lastOutreachText}\n\n` +
+    `Please make these changes: ${request}\n\n` +
+    `Return the complete updated copy in the exact same format (## N. MESSAGE NAME headings, separated by ---).`
+  }];
+
+  try {
+    const text = await callClaude(OUTREACH_PROMPT, userMsg, 8000);
+    lastOutreachText = text;
+    renderOutreachMessages(text, lastOutreachBrand);
+  } catch (e) {
+    btn.disabled    = false;
+    btn.textContent = 'Apply';
+    alert('Error: ' + e.message);
   }
 }
 
@@ -316,6 +346,21 @@ function renderOutreachMessages(text, brand) {
     });
     container.appendChild(copyAllBtn);
     messages.forEach((msg, idx) => container.appendChild(buildMsgCard(msg, idx === 0)));
+
+    const refineDiv = document.createElement('div');
+    refineDiv.className = 'refine-area';
+    refineDiv.innerHTML = `
+      <div class="refine-label">Want to make changes?</div>
+      <div class="refine-row">
+        <input type="text" id="refine-input" class="refine-input" placeholder='e.g. "Make the DM messages shorter" or "Remove the Vogue mention"'>
+        <button class="btn-refine" id="refine-btn">Apply</button>
+      </div>`;
+    container.appendChild(refineDiv);
+
+    document.getElementById('refine-btn').addEventListener('click', refineOutreach);
+    document.getElementById('refine-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') refineOutreach();
+    });
   }
 
   showResults('Outreach Copy — ' + brand, messages.length + ' messages');
