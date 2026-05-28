@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agency 8 — Outreach Brief Creator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-left">
+        <span class="logo">Agency 8</span>
+        <span class="logo-sub">Outreach Brief Creator</span>
+      </div>
+      <button class="btn-settings" id="btn-settings">⚙ Settings</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="layout">
+
+      <!-- FORM PANEL -->
+      <div class="panel panel-form">
+        <div class="panel-title">Campaign Materials</div>
+
+        <!-- File upload area -->
+        <div class="upload-zone" id="upload-zone">
+          <div class="upload-icon">📎</div>
+          <div class="upload-label">Drop files here or click to upload</div>
+          <div class="upload-hint">Onboarding transcript, brand guidelines, campaign brief — any .txt or .md files</div>
+          <input type="file" id="file-input" multiple accept=".txt,.md" style="display:none">
+        </div>
+
+        <div class="file-list hidden" id="file-list"></div>
+
+        <div class="divider">
+          <span>Campaign-specific details</span>
+        </div>
+
+        <div class="fld">
+          <label>Brand Name <span class="opt">(used to name output files)</span></label>
+          <input type="text" id="f-brand" placeholder="e.g. ILIA Beauty">
+        </div>
+
+        <div class="fld">
+          <label>Form Link <span class="opt">(if not in your files)</span></label>
+          <input type="url" id="f-form-link" placeholder="https://form.fillout.com/t/...">
+        </div>
+
+        <div class="fld">
+          <label>Team Email for Paid Inquiries <span class="opt">(if not in your files)</span></label>
+          <input type="email" id="f-team-email" placeholder="partnerships@agency-eight.com">
+        </div>
+
+        <div class="form-row">
+          <div class="fld">
+            <label>Your Name</label>
+            <input type="text" id="f-manager-name" placeholder="e.g. Loulou">
+          </div>
+          <div class="fld">
+            <label>Your Title</label>
+            <input type="text" id="f-manager-title" placeholder="e.g. ILIA Account Manager">
+          </div>
+        </div>
+
+        <div class="fld">
+          <label>Location</label>
+          <input type="text" id="f-location" placeholder="e.g. New York, NY">
+        </div>
+
+        <div class="fld">
+          <label>Additional Notes <span class="opt">(anything not covered in your files)</span></label>
+          <textarea id="f-context" rows="4" placeholder="Any extra details to include…"></textarea>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn-generate" id="btn-outreach">✉ Generate Outreach Copy</button>
+          <button class="btn-generate btn-brief" id="btn-brief">📄 Generate Content Brief</button>
+        </div>
+      </div>
+
+      <!-- OUTPUT PANEL -->
+      <div class="panel panel-output">
+        <div class="output-empty" id="output-empty">
+          <div class="empty-icon">✉</div>
+          <div class="empty-title">Ready to generate</div>
+          <div class="empty-sub">Upload your campaign files and click Generate Outreach Copy or Generate Content Brief.</div>
+        </div>
+        <div class="output-loading hidden" id="output-loading">
+          <div class="spinner"></div>
+          <div class="loading-text" id="loading-text">Generating outreach copy…</div>
+        </div>
+        <div class="output-results hidden" id="output-results">
+          <div class="results-header">
+            <div class="results-title" id="results-title">Outreach Copy</div>
+            <div class="results-meta" id="results-meta"></div>
+          </div>
+          <div id="messages-container"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="overlay hidden" id="settings-overlay">
+    <div class="modal">
+      <div class="modal-hdr">
+        <h3>Settings</h3>
+        <button class="modal-x" id="settings-close">✕</button>
+      </div>
+      <div class="fld">
+        <label>Anthropic API Key</label>
+        <input type="password" id="f-api-key" placeholder="sk-ant-api03-…">
+        <div class="field-hint">Stored only in this browser — never saved to any server or file.</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-sec" id="settings-cancel">Cancel</button>
+        <button class="btn-pri" id="settings-save">Save Key</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- No API Key Modal -->
+  <div class="overlay hidden" id="nokey-overlay">
+    <div class="modal modal-sm">
+      <div class="modal-hdr"><h3>API Key Required</h3></div>
+      <p style="color:#8b949e;font-size:13px;margin-bottom:20px">Add your Anthropic API key in Settings to start generating.</p>
+      <div class="modal-footer">
+        <button class="btn-sec" id="nokey-cancel">Cancel</button>
+        <button class="btn-pri" id="nokey-settings">Open Settings</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>
