@@ -166,13 +166,15 @@ function formatBytes(b) {
 // ── Build user message ────────────────────────────────────────────────────────
 
 function buildUserMessage(mode) {
-  const brand     = document.getElementById('f-brand').value.trim();
-  const formLink  = document.getElementById('f-form-link').value.trim();
-  const teamEmail = document.getElementById('f-team-email').value.trim();
-  const name      = document.getElementById('f-manager-name').value.trim();
-  const title     = document.getElementById('f-manager-title').value.trim();
-  const location  = document.getElementById('f-location').value.trim();
-  const context   = document.getElementById('f-context').value.trim();
+  const brand       = document.getElementById('f-brand').value.trim();
+  const brandIg     = document.getElementById('f-brand-ig').value.trim();
+  const brandWeb    = document.getElementById('f-brand-website').value.trim();
+  const formLink    = document.getElementById('f-form-link').value.trim();
+  const teamEmail   = document.getElementById('f-team-email').value.trim();
+  const name        = document.getElementById('f-manager-name').value.trim();
+  const title       = document.getElementById('f-manager-title').value.trim();
+  const location    = document.getElementById('f-location').value.trim();
+  const context     = document.getElementById('f-context').value.trim();
 
   const textFiles = uploadedFiles.filter(f => f.type !== 'pdf');
   const pdfFiles  = uploadedFiles.filter(f => f.type === 'pdf');
@@ -190,13 +192,15 @@ function buildUserMessage(mode) {
   }
 
   const details = [
-    brand     ? 'Brand name: ' + brand         : '',
-    formLink  ? 'Form link: ' + formLink        : '',
+    brand     ? 'Brand name: ' + brand                   : '',
+    brandIg   ? 'Brand Instagram: ' + brandIg            : '',
+    brandWeb  ? 'Brand website: ' + brandWeb             : '',
+    formLink  ? 'Form link: ' + formLink                 : '',
     teamEmail ? 'Team email for paid inquiries: ' + teamEmail : '',
-    name      ? 'Manager name: ' + name         : '',
-    title     ? 'Manager title: ' + title       : '',
-    location  ? 'Location: ' + location         : '',
-    context   ? 'Additional notes:\n' + context : '',
+    name      ? 'Manager name: ' + name                  : '',
+    title     ? 'Manager title: ' + title                : '',
+    location  ? 'Location: ' + location                  : '',
+    context   ? 'Additional notes:\n' + context          : '',
   ].filter(Boolean);
 
   if (details.length > 0) {
