@@ -103,6 +103,53 @@ function messagesToText(msgs) {
   ).join('\n\n---\n\n');
 }
 
+function bodyToHtml(text) {
+  return text.split(/\n\n+/).map(p => {
+    const withBr   = p.trim().replace(/\n/g, '<br>');
+    const withBold = withBr.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    return '<p style="margin:0 0 12px 0;font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#000">' + withBold + '</p>';
+  }).join('');
+}
+
+function messageToHtml(msg) {
+  let html = '';
+  if (msg.subject) {
+    html += `<p style="margin:0 0 12px 0;font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#000"><strong>Subject: ${esc(msg.subject)}</strong></p>`;
+  }
+  html += bodyToHtml(msg.body);
+  return html;
+}
+
+function messagesToHtml(msgs, brand) {
+  const title = brand ? brand + ' — Outreach Copy' : 'Outreach Copy';
+  let html = `<h1 style="font-family:Arial,sans-serif;font-size:28px;font-weight:700;margin:0 0 8px 0;color:#000">${esc(title)}</h1>`;
+  html += `<hr style="border:none;border-top:1px solid #ccc;margin:12px 0 24px 0">`;
+  msgs.forEach((msg, i) => {
+    html += `<h3 style="font-family:Arial,sans-serif;font-size:16px;font-weight:700;margin:0 0 8px 0;color:#000">${msg.num}. ${esc(msg.name)}</h3>`;
+    if (msg.subject) {
+      html += `<p style="margin:0 0 12px 0;font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#000"><strong>Subject: ${esc(msg.subject)}</strong></p>`;
+    }
+    html += bodyToHtml(msg.body);
+    if (i < msgs.length - 1) {
+      html += `<hr style="border:none;border-top:1px solid #ccc;margin:20px 0">`;
+    }
+  });
+  return html;
+}
+
+async function copyRich(html, plain) {
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        'text/html':  new Blob([html],  { type: 'text/html' }),
+        'text/plain': new Blob([plain], { type: 'text/plain' }),
+      })
+    ]);
+  } catch {
+    await navigator.clipboard.writeText(plain);
+  }
+}
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', bindAll);
@@ -352,7 +399,9 @@ function renderOutreachMessages(text, brand) {
     copyAllBtn.className = 'btn-copy-all';
     copyAllBtn.textContent = 'Copy All';
     copyAllBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(messagesToText(lastOutreachMessages)).then(() => {
+      const html  = messagesToHtml(lastOutreachMessages, lastOutreachBrand);
+      const plain = messagesToText(lastOutreachMessages);
+      copyRich(html, plain).then(() => {
         copyAllBtn.textContent = 'Copied!';
         setTimeout(() => { copyAllBtn.textContent = 'Copy All'; }, 2000);
       });
@@ -437,8 +486,9 @@ function buildMsgCard(msg, openByDefault, idx) {
 
   cpBtn.addEventListener('click', e => {
     e.stopPropagation();
-    const copyStr = (msg.subject ? 'Subject: ' + msg.subject + '\n\n' : '') + msg.body;
-    navigator.clipboard.writeText(copyStr).then(() => {
+    const html  = messageToHtml(msg);
+    const plain = (msg.subject ? 'Subject: ' + msg.subject + '\n\n' : '') + msg.body;
+    copyRich(html, plain).then(() => {
       cpBtn.textContent = 'Copied!';
       cpBtn.classList.add('copied');
       setTimeout(() => { cpBtn.textContent = 'Copy'; cpBtn.classList.remove('copied'); }, 2000);
