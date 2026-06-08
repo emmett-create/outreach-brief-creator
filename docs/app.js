@@ -120,12 +120,18 @@ function messageToHtml(msg) {
   return html;
 }
 
+const MSG_SECTIONS = { 1: 'EMAIL OUTREACH', 3: 'DM OUTREACH', 5: 'RESPONSE MESSAGES', 9: 'FOLLOW-UP MESSAGES' };
+
 function messagesToHtml(msgs, brand) {
   const title = brand ? brand + ' — Outreach Copy' : 'Outreach Copy';
   let html = `<h1 style="font-family:Arial,sans-serif;font-size:28px;font-weight:700;margin:0 0 8px 0;color:#000">${esc(title)}</h1>`;
   html += `<hr style="border:none;border-top:1px solid #ccc;margin:12px 0 24px 0">`;
   msgs.forEach((msg, i) => {
-    html += `<h3 style="font-family:Arial,sans-serif;font-size:16px;font-weight:700;margin:0 0 8px 0;color:#000">${msg.num}. ${esc(msg.name)}</h3>`;
+    const section = MSG_SECTIONS[parseInt(msg.num)];
+    if (section) {
+      html += `<h2 style="font-family:Arial,sans-serif;font-size:18px;font-weight:700;margin:${i > 0 ? '8px' : '0'} 0 12px 0;color:#000">${section}</h2>`;
+    }
+    html += `<h3 style="font-family:Arial,sans-serif;font-size:15px;font-weight:700;margin:0 0 8px 0;color:#000">${msg.num}. ${esc(msg.name)}</h3>`;
     if (msg.subject) {
       html += `<p style="margin:0 0 12px 0;font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#000"><strong>Subject: ${esc(msg.subject)}</strong></p>`;
     }
